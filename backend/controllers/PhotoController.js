@@ -152,6 +152,88 @@ const updatePhoto = async (req, res) => {
     }
   };
 
+// Like functionality
+const likePhoto = async (req, res) => {
+    const { id } = req.params;
+  
+    const reqUser = req.user;
+  
+    try {
+        const photo = await Photo.findById(id);
+    
+        // Check if photo exists
+        if (!photo) {
+            res.status(404).json({ errors: ["Foto não encontrada!"] });
+            return;
+        }
+    
+        // Check if user already liked the photo
+        if (photo.likes.includes(reqUser._id)) {
+            res.status(422).json({ errors: ["Você já curtiu esta foto."] });
+            return;
+        }
+    
+        // Put user id in array of likes
+        photo.likes.push(reqUser._id);
+    
+        await photo.save();
+    
+        res.status(200)
+            .json({ photoId: id, userId: reqUser._id, message: "A foto foi curtida!" });
+    } catch (error) {
+        res.status(404).json({ errors: ["Foto não encontrada!"] });
+        return;
+    }
+  };
+
+// Comment functionality
+const commentPhoto = async (req, res) => {
+    const { id } = req.params;
+    const { comment } = req.body;
+  
+    const reqUser = req.user;
+  
+    try {
+        const user = await User.findById(reqUser._id);
+    
+        const photo = await Photo.findById(id);
+    
+        // Check if photo exists
+        if (!photo) {
+            res.status(404).json({ errors: ["Foto não encontrada!"] });
+            return;
+        }
+    
+        // Put comment in the array of comments
+        const userComment = {
+            comment,
+            userName: user.name,
+            userImage: user.profileImage,
+            userId: user._id,
+        };
+    
+        photo.comments.push(userComment);
+    
+        await photo.save();
+    
+        res.status(200).json({
+            comment: userComment,
+            message: "Comentário adicionado com sucesso!",
+        });
+    } catch (error) {
+        res.status(404).json({ errors: ["Foto não encontrada!"] });
+        return;
+    }
+  };
+
+// Search a photo by title
+const searchPhotos = async (req, res) => {
+    const { q } = req.query;
+  
+    const photos = await Photo.find({ title: new RegExp(q, "i") }).exec();
+  
+    res.status(200).json(photos);
+  };
 
 module.exports = {
     insertPhoto,
@@ -160,4 +242,7 @@ module.exports = {
     getUserPhotos,
     getPhotoById,
     updatePhoto,
+    likePhoto,
+    commentPhoto,
+    searchPhotos,
   };
