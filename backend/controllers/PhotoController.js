@@ -40,7 +40,7 @@ const deletePhoto = async (req, res) => {
   
     try {
         const photo = await Photo.findById(id);
-        
+
         // Check if photo exists
         if (!photo) {
             res.status(404).json({ errors: ["Foto não encontrada!"] });
@@ -66,7 +66,17 @@ const deletePhoto = async (req, res) => {
     }
   };
 
+// Get all photos
+const getAllPhotos = async (req, res) => {
+    const photos = await Photo.find({})
+      .sort([["createdAt", -1]])
+      .exec();
+  
+    return res.status(200).json(photos);
+  };
+
 module.exports = {
     insertPhoto,
     deletePhoto,
+    getAllPhotos,
   };
